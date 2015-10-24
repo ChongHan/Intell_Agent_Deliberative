@@ -15,16 +15,11 @@ public class State {
 
 
     private City agentPosition;
-    private Hashtable<Integer,City> tasksPosition;
+    private Hashtable<Task,City> tasksPosition;
 
-    State (City position, Hashtable<Integer,City> tasksTable){
+    State (City position, Hashtable<Task,City> tasksTable){
         agentPosition = position;
         tasksPosition = tasksTable;
-    }
-
-    private int computeCostFunction(){
-        //TODO
-        return 0;
     }
 
     public City getAgentPosition() {

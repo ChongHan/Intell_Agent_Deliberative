@@ -1,6 +1,7 @@
 package template;
 
 /* import table */
+import logist.plan.Action;
 import logist.simulation.Vehicle;
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
@@ -23,6 +24,7 @@ import java.util.List;
 public class DeliberativeTemplate implements DeliberativeBehavior {
 
 	enum Algorithm { BFS, ASTAR }
+    private static int EMPTY_LOAD = 0;
 	
 	/* Environment */
 	Topology topology;
@@ -50,9 +52,30 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 		
 		// ...
 	}
-	
-	@Override
-	public Plan plan(Vehicle vehicle, TaskSet tasks) {
+
+    @Override
+    public Plan plan(Vehicle vehicle, TaskSet tasks) {
+        Plan plan;
+        System.out.println("calculating new Plan! " + vehicle.toString());
+        System.out.println(tasks.toString());
+        // Compute the plan with the selected algorithm.
+        switch (algorithm) {
+            case ASTAR:
+                // ...
+                plan = naivePlan(vehicle, tasks);
+                break;
+            case BFS:
+                // ...
+                plan = naivePlan(vehicle, tasks);
+                break;
+            default:
+                throw new AssertionError("Should not happen.");
+        }
+        System.out.println(plan.toString());
+        return plan;
+    }
+
+	private Plan DeliberativePlan(Vehicle vehicle, TaskSet tasks) {
         //Initialisation of variables
         State initialState = createInitialState(vehicle,tasks);
         List<State> finalStates = createFinalStateList(tasks);
@@ -63,7 +86,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
         // node list C of the algorithm
 
         //add initial node to the node list Q
-        nodesToVisit.add(new Node (null, initialState));
+        nodesToVisit.add(new Node (initialState, null, EMPTY_LOAD, vehicle.capacity()));
 
         while(true){
             if (nodesToVisit.isEmpty()) {
@@ -98,7 +121,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
             }
         }
 	}
-	
+
 	private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {
 		City current = vehicle.getCurrentCity();
 		Plan plan = new Plan(current);
@@ -139,10 +162,10 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
      */
     private LinkedList<State> createFinalStateList(TaskSet tasks){
         LinkedList<State> finalStates = new LinkedList<>();
-        Hashtable<Integer, City> tasksPosition = new Hashtable<>();
+        Hashtable<Task, City> tasksPosition = new Hashtable<>();
         //Create the hash table of the final destinations of all tasks
         for (Task task : tasks) {
-            tasksPosition.put(task.id,task.deliveryCity);
+            tasksPosition.put(task,task.deliveryCity);
         }
         //create a list of all possible final states. Variable: agent location.
         for (City city: topology)
@@ -158,10 +181,10 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
      * @return a State object corresponding to the initial state of the simulation.
      */
     private State createInitialState(Vehicle vehicle, TaskSet tasks){
-        Hashtable<Integer, City> tasksPosition = new Hashtable<>();
+        Hashtable<Task, City> tasksPosition = new Hashtable<>();
         //create the hash table of the initial positions of all tasks
         for (Task task : tasks) {
-            tasksPosition.put(task.id,task.pickupCity);
+            tasksPosition.put(task,task.pickupCity);
         }
 
         return new State (vehicle.getCurrentCity(), tasksPosition);
@@ -174,7 +197,67 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
      * @return a list of nodes reachable from node n
      */
     private LinkedList<Node> findSuccessors (Node n){
-        //TODO
+        // Get relevant information from the node
+        TaskSet tasks = (TaskSet) n.getCurrentState().getTasksPosition().keySet();
+        City agentCurrentCity = n.getCurrentState().getAgentPosition();
+        List<City> neighbors = agentCurrentCity.neighbors();
+
+        // Check for tasks that can be picked up at the current location.
+        // Each task can be picked up if its location in the current state is equal to its pickup city
+        // and if the agent is not full yet.
+        int counter = 0;
+        List<Task> breakpointTasks = new ArrayList<>();
+        for (Task task : tasks){
+            if (task.pickupCity == agentCurrentCity && task.weight <= n.getFreeSpace()){
+                counter++;
+                breakpointTasks.add(task);
+            }
+        }
+
+        // For each pickup task available, the number of states is multiplied by 2.
+        // In the following section, we create all possible states by iterating over the neighbors and over the
+        // possible amount of states for each move to a neighboring city.
+
+        //For each possible neighboring city create the states and its corresponding hash table.
+        for (City neighbor: neighbors){
+            int possibleStates = (int) Math.pow(2,counter);
+            int separator = possibleStates/((int)Math.pow(2,breakpointTasks.size()));
+            for (int j=0; j<possibleStates; j++){
+                // Create the corresponding hash table for this state.
+                Hashtable<Task,City> newTaskPositions = n.getCurrentState().getTasksPosition();
+                Plan newPlan = n.getPlan();
+                double newLoad = n.getLoad();
+                for (Task task : tasks){
+                    City taskPosition = newTaskPositions.get(task);
+                    if (taskPosition == agentCurrentCity){
+                        if (task.deliveryCity.equals(agentCurrentCity)) {
+                            // The package has reached its destination, deliver it.
+                            newPlan.appendDelivery(task);
+                            newLoad -= task.weight;
+                        }
+                        else if(taskPosition != task.pickupCity){
+                            // The package is in transit, continue the transit.
+                            newTaskPositions.replace(task, neighbor);
+                        }
+                        else if (taskPosition == task.pickupCity && task.weight <= n.getFreeSpace()){
+                            // This if condition corresponds to the tree of all possible states.
+                            // More explanations available in the report.
+                            if(j%(2*separator)<separator){
+                                //Take it!
+                                newTaskPositions.replace(task, neighbor);
+                                newPlan.appendPickup(task);
+                                newLoad+=task.weight;
+                            }
+                            // else leave it there.
+                        }
+                        newPlan.appendMove(neighbor);
+                    }
+                }
+                State nextState = new State(neighbor, newTaskPositions);
+                Node nextNode = new Node(nextState, newPlan, newLoad);
+            }
+        }
+
         return null;
     }
 
