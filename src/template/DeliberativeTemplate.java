@@ -104,14 +104,21 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 
             switch (algorithm) {
                 case ASTAR:
-                    if (!nodesVisited.contains(n) || listContainsNodeWithSmallerCost(nodesVisited, n)) {
+                    if (!stateHasBeenVisited(nodesVisited, n) || listContainsNodeWithBiggerCost(nodesVisited, n)) {
+                        //Delete entry in the list
+                        for ( Node node : nodesVisited) {
+                            if (node.getCurrentState().equals(n.getCurrentState())) {
+                                nodesVisited.remove(node);
+                                break;
+                            }
+                        }
                         nodesVisited.add(n);
                         List<Node> successors = findSuccessors(n);
                         sortNodeList(successors);
                         addAndSortList(nodesToVisit, successors);
                     }
                 case BFS:
-                    if (!nodesVisited.contains(n)) {
+                    if (!stateHasBeenVisited(nodesVisited, n)) {
                         nodesVisited.add(n);
                         List<Node> successors = findSuccessors(n);
                         nodesToVisit.addAll(successors);
@@ -267,9 +274,27 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
      * @param n node to find
      * @return true if the node is in the list with a lower cost, false otherwise.
      */
-    private boolean listContainsNodeWithSmallerCost(List<Node> nodesVisited, Node n){
+    private boolean listContainsNodeWithBiggerCost(List<Node> nodesVisited, Node n){
         //TODO Remove the node with smaller cost!
+        boolean result = false;
+        for ( Node node : nodesVisited){
+            if (node.getCurrentState().equals(n.getCurrentState())){
+                if (node.getCost() > n.getCost()){
+                    result = true;
+                }
+            }
+        }
         return false;
+    }
+
+    private boolean stateHasBeenVisited(List<Node> nodesVisited, Node n){
+        boolean result = false;
+        for ( Node node : nodesVisited) {
+            if (node.getCurrentState().equals(n.getCurrentState())) {
+                result = true;
+            }
+        }
+        return result;
     }
 
     /**
