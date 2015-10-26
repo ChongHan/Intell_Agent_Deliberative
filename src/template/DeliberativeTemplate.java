@@ -12,10 +12,7 @@ import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * An optimal planner for one vehicle.
@@ -114,8 +111,8 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
                         }
                         nodesVisited.add(n);
                         List<Node> successors = findSuccessors(n);
-                        sortNodeList(successors);
-                        addAndSortList(nodesToVisit, successors);
+                        nodesToVisit.add((Node) successors);
+                        Collections.sort(nodesToVisit);
                     }
                 case BFS:
                     if (!stateHasBeenVisited(nodesVisited, n)) {
@@ -297,24 +294,4 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
         return result;
     }
 
-    /**
-     * Sorts the list given in argument according to the cost.
-     * @param successors is the list to sort
-     * @return a sorted list
-     */
-    private LinkedList<Node> sortNodeList(List<Node> successors){
-        //TODO
-        return null;
-    }
-
-    /**
-     * Uses a merge-sort algorithm to merge two sorted lists
-     * @param nodesToVisit is one sorted list to be merge
-     * @param successors is the second sorted list to be merged
-     * @return a sorted list merging the two lists given in argument.
-     */
-    private LinkedList<Node> addAndSortList(List<Node> nodesToVisit, List<Node> successors){
-        //TODO
-        return null;
-    }
 }

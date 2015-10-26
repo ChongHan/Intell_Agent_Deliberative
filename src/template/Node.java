@@ -6,7 +6,7 @@ import logist.plan.Plan;
  * This Class represent a node in our search tree with all the related information including the update plan from the
  * root of the tree. Created by Daniel on 23.10.15.
  */
-public class Node
+public class Node implements Comparable<Node>
 {
 
     private static double capacity;
@@ -63,6 +63,7 @@ public class Node
     private int costFunction()
     {
         //TODO
+        
         return 0;
     }
 
@@ -91,4 +92,9 @@ public class Node
         return (capacity - load);
     }
 
+    @Override
+    public int compareTo(Node o)
+    {
+        return Double.compare(this.getCost(), o.getCost());
+    }
 }
