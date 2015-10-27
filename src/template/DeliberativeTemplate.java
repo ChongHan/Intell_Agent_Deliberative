@@ -83,7 +83,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
         // node list C of the algorithm
 
         //add initial node to the node list Q
-        nodesToVisit.add(new Node (initialState, null, EMPTY_LOAD, vehicle.capacity()));
+        nodesToVisit.add(new Node (initialState, null, EMPTY_LOAD, vehicle.capacity(), vehicle.costPerKm()));
 
         while(true){
             if (nodesToVisit.isEmpty()) {
