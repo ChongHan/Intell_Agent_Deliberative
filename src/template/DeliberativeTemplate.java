@@ -14,10 +14,7 @@ import logist.topology.Topology;
 import logist.topology.Topology.City;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * An optimal planner for one vehicle.
@@ -98,7 +95,7 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
 
         //add initial node to the node list Q
         Node initialNode = new Node (initialState, null, vehicle.getCurrentTasks(),
-                                    vehicleLoad(vehicle), vehicle.capacity());
+                                    vehicleLoad(vehicle), vehicle.capacity(), vehicle.costPerKm());
         nodesToVisit.add(initialNode);
         int i = 0; //loop counter
         long startTime = System.currentTimeMillis();
@@ -142,20 +139,14 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
                         }
                         nodesVisited.add(n);
                         List<Node> successors = findSuccessors(n, completeTasks);
-                        sortNodeList(successors);
-                        addAndSortList(nodesToVisit, successors);
+                        nodesToVisit.add((Node) successors);
+                        Collections.sort(nodesToVisit);
                     }
                     break;
                 case BFS:
                     if (!stateHasBeenVisited(nodesVisited, n)) {
                         nodesVisited.add(n);
                         List<Node> successors = findSuccessors(n, completeTasks);
-                        /*DFS
-                        tempQ = nodesToVisit;
-                        nodesToVisit = new LinkedList<Node>();
-                        nodesToVisit.addAll(successors);
-                        nodesToVisit.addAll(tempQ);
-                        */
                         nodesToVisit.addAll(successors);
                     } else {
                         if (print) {
@@ -242,6 +233,11 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
         return new State (vehicle.getCurrentCity(), tasksPosition);
     }
 
+    /**
+     * Coalculate the load of the vehicle according to its list of tasks that the vehicle is carrying.
+     * @param vehicle vehicle object containing the list of current tasks.
+     * @return the load of the vehicle.
+     */
     private double vehicleLoad (Vehicle vehicle){
         double load =0;
         if (!vehicle.getCurrentTasks().isEmpty()){
@@ -359,6 +355,12 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
         return successors;
     }
 
+    /**
+     * Checks if the node that we are analyzing in the algorithm is a final state and thus, if we can finalize
+     * the plan.
+     * @param n node to be checked
+     * @return true is the node n is a final node, false otherwise.
+     */
     private boolean reachedFinalState(Node n){
         Hashtable <Task, City> taskTable = n.getCurrentState().getTasksPosition();
         for ( Task task : taskTable.keySet()){
@@ -374,18 +376,22 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
      * @return true if the node is in the list with a lower cost, false otherwise.
      */
     private boolean listContainsNodeWithBiggerCost(List<Node> nodesVisited, Node n){
-        //TODO Remove the node with smaller cost!
-        boolean result = false;
         for ( Node node : nodesVisited){
             if (node.getCurrentState().equals(n.getCurrentState())){
                 if (node.getCost() > n.getCost()){
-                    result = true;
+                    return true;
                 }
             }
         }
         return false;
     }
 
+    /**
+     * Checks if the node contains a state that the algorithm have been through before.
+     * @param nodesVisited list of visited nodes with their corresponding states.
+     * @param n node ot check against.
+     * @return true if the state of node n is equal to the state of a node in nodesVisited list, false otherwise.
+     */
     private boolean stateHasBeenVisited(List<Node> nodesVisited, Node n){
         for ( Node node : nodesVisited) {
             if (node.getCurrentState().equals(n.getCurrentState())) {
