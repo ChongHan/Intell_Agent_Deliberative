@@ -32,19 +32,21 @@ public class State {
     }
 
     @Override
-    public boolean equals(Object obj){
-        State state = (State) obj;
-        if(agentPosition != state.getAgentPosition()) { return false;}
-        for (Task taskA : tasksPosition.keySet()){
-            for (Object taskB : state.getTasksPosition().keySet()){
-                if (taskA.equals(taskB) && tasksPosition.get(taskA) != state.getTasksPosition().get(taskB)){
-                    return false;
-                }
-            }
-
-        }
-        return true;
+    public boolean equals(Object o){
+        if (this == o) {return true;}
+        if (o == null || getClass() != o.getClass()) {return false;}
+        State state = (State) o;
+        if (!agentPosition.equals(state.agentPosition)) {return false;}
+        return tasksPosition.equals(state.tasksPosition);
     }
+
+    @Override
+    public int hashCode()
+    {
+        int result = agentPosition.hashCode();
+        result = 31 * result + tasksPosition.hashCode();
+        return result;
+     }
 
     public City getAgentPosition() {
         return agentPosition;

@@ -9,5 +9,12 @@
 		<set class-name="template.DeliberativeTemplate"/>
 		<set algorithm="BFS"/>
 	</agent>
+
+	<!-- #### DELIBERATIVE AGENTS ### -->
+	<agent name="deliberative-astar">
+		<set class-path="bin/"/>
+		<set class-name="template.DeliberativeTemplate"/>
+		<set algorithm="ASTAR"/>
+	</agent>
 	
 </agents>
