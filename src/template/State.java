@@ -19,7 +19,31 @@ public class State {
 
     State (City position, Hashtable<Task,City> tasksTable){
         agentPosition = position;
-        tasksPosition = tasksTable;
+        tasksPosition = new Hashtable<>(tasksTable);
+    }
+
+    @Override
+    public String toString(){
+        String string = new String("Agent is in " + agentPosition + "\n");
+        for ( Task task : tasksPosition.keySet()){
+            string += ("Task " + task.id + " is in " + tasksPosition.get(task) + "\n");
+        }
+        return string;
+    }
+
+    @Override
+    public boolean equals(Object obj){
+        State state = (State) obj;
+        if(agentPosition != state.getAgentPosition()) { return false;}
+        for (Task taskA : tasksPosition.keySet()){
+            for (Object taskB : state.getTasksPosition().keySet()){
+                if (taskA.equals(taskB) && tasksPosition.get(taskA) != state.getTasksPosition().get(taskB)){
+                    return false;
+                }
+            }
+
+        }
+        return true;
     }
 
     public City getAgentPosition() {
