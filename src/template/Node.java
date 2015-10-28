@@ -6,17 +6,14 @@ import logist.task.Task;
 import logist.task.TaskSet;
 import logist.topology.Topology.City;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This Class represent a node in our search tree with all the related information including the update plan from
  * the root of the tree.
  * Created by Daniel on 23.10.15.
  */
-public class Node implements Comparable<Node>{
+public class Node implements Comparable<Node>, Comparator<Node> {
 
     private State currentState = null;
     private List<Action> plan = new ArrayList<>();
@@ -24,17 +21,6 @@ public class Node implements Comparable<Node>{
     private double load = 0;
     private double cost = 0; //f function f = g + h
     private double h;
-
-    public void setG(double g)
-    {
-        this.g = g;
-    }
-
-    public double getG()
-    {
-        return g;
-    }
-
     private double g = 0;
 
 
@@ -88,8 +74,14 @@ public class Node implements Comparable<Node>{
     @Override
     public String toString(){
         return (currentState.toString() + "The vehicle has a capacity of " + capacity + " and has a load of "
-                          + load + ".\nIt contains the following tasks: " + carriedTasks.toString() +
-                          "\nThe plan is:\n" + plan.toString() + "\nThe cost of this plan is evaluated at " + cost);
+                + load + ".\nIt contains the following tasks: " + carriedTasks.toString() + "\nThe plan is:\n"
+                + plan.toString() + "\nThe cost of this plan is evaluated at " + g + "+" + h + "=" + (g+h));
+    }
+
+    @Override
+    public int compare(Node o1, Node o2)
+    {
+        return Double.compare(o1.getCost(), o2.getCost());
     }
 
     @Override
@@ -103,14 +95,20 @@ public class Node implements Comparable<Node>{
         Hashtable<Task, City> tasks =  currentState.getTasksPosition();
         for (Map.Entry<Task, City> entry : tasks.entrySet())
         {
-            double deliveryCost = entry.getKey().deliveryCity.distanceTo(entry.getValue());
-            double pickupCost = currentState.getAgentPosition().distanceTo(entry.getValue()) * costPerKm;
-            double c = deliveryCost + pickupCost;
-            if (c > h)
-            {
-                h = c;
+            if (!entry.getKey().deliveryCity.equals(entry.getValue())) {
+                double deliveryCost = entry.getKey().deliveryCity.distanceTo(entry.getValue()) * costPerKm;
+                double pickupCost = currentState.getAgentPosition().distanceTo(entry.getValue()) * costPerKm;
+                double c = deliveryCost + pickupCost;
+                if (c > h)
+                {
+                    h = c;
+                }
             }
         }
+    }
+
+    public void updateG(Node n){
+        g = n.getG() + n.getCurrentState().getAgentPosition().distanceTo(currentState.getAgentPosition()) * costPerKm;
     }
 
     public State getCurrentState() {return currentState;}
@@ -126,5 +124,9 @@ public class Node implements Comparable<Node>{
     public static double getCapacity() {return capacity;}
 
     public double getFreeSpace() {return (capacity-load);}
+
+    public double getG() { return g; }
+
+    public void setG(double g) { this.g = g;}
 
 }
