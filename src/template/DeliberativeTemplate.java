@@ -139,8 +139,20 @@ public class DeliberativeTemplate implements DeliberativeBehavior {
                         }
                         nodesVisited.add(n);
                         List<Node> successors = findSuccessors(n, completeTasks);
+                        for (Node node : successors)
+                        {
+                            node.setG(n.getG() + n.getCurrentState().getAgentPosition().distanceTo(node
+                                    .getCurrentState().getAgentPosition()) * vehicle.costPerKm());
+                        }
                         nodesToVisit.add((Node) successors);
-                        Collections.sort(nodesToVisit);
+                        Collections.sort(nodesToVisit, new Comparator<Node>()
+                        {
+                            @Override
+                            public int compare(Node o1, Node o2)
+                            {
+                                return Double.compare(o1.getCost(), o2.getCost());
+                            }
+                        });
                     }
                     break;
                 case BFS:

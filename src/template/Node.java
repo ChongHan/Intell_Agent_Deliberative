@@ -23,6 +23,21 @@ public class Node implements Comparable<Node>{
     private static double capacity;
     private double load = 0;
     private double cost = 0; //f function f = g + h
+    private double h;
+
+    public void setG(double g)
+    {
+        this.g = g;
+    }
+
+    public double getG()
+    {
+        return g;
+    }
+
+    private double g = 0;
+
+
     private static double costPerKm = 0;
     private ArrayList<Task> carriedTasks = new ArrayList<>();
 
@@ -88,11 +103,12 @@ public class Node implements Comparable<Node>{
         Hashtable<Task, City> tasks =  currentState.getTasksPosition();
         for (Map.Entry<Task, City> entry : tasks.entrySet())
         {
-            double distance;
-            distance = entry.getKey().deliveryCity.distanceTo(entry.getValue());
-            if ((distance * costPerKm) > cost)
+            double deliveryCost = entry.getKey().deliveryCity.distanceTo(entry.getValue());
+            double pickupCost = currentState.getAgentPosition().distanceTo(entry.getValue()) * costPerKm;
+            double c = deliveryCost + pickupCost;
+            if (c > h)
             {
-                cost = costPerKm;
+                h = c;
             }
         }
     }
@@ -103,7 +119,7 @@ public class Node implements Comparable<Node>{
 
     public List<Action> getPlan() {return plan;}
 
-    public double getCost() {return cost;}
+    public double getCost() {return h + g;}
 
     public double getLoad() {return load;}
 
